@@ -1,14 +1,19 @@
-name: ubuntu
-on: 
-  workflow_dispatch:
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    timeout-minutes: 360
     runs-on: ubuntu-22.04
     steps:
-    - name: Setup chroot
-    - run: |
-        sudo apt install debootstrap -y
-        sudo su -c "mkdir -p /mnt/chroot/debian"
-        sudo su -c "debootstrap bullseye /mnt/chroot/debian http://deb.debian.org/debian"
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt install debootstrap -y
+          sudo su -c "mkdir -p /mnt/chroot/debian"
+          sudo su -c "debootstrap bullseye /mnt/chroot/debian http://deb.debian.org/debian"
