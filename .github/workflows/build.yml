@@ -55,13 +55,77 @@ jobs:
         sudo rm -rf /mnt/debian.tar
     - name: Build kernel
       run: |
-        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/build.sh; chmod a+x build.sh; ./build.sh\""
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/build.sh; chmod a+x build.sh; ./build.sh &; PID=$!; sleep 30m; kill $PID\""
         sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
         sudo chown -R runner:runner /mnt
     - name: Upload debian chroot image
       uses: actions/upload-artifact@v4
       with:
         name: debian-1
+        path: |
+          /mnt/debian.tar
+
+  actual-1:
+    needs: actual
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Configure permissions
+      run: |
+        sudo chown -R runner:runner /mnt
+    - name: Download debian chroot image
+      uses: actions/download-artifact@v4
+      with:
+        name: debian-1
+        path: |
+          /mnt/debian.tar
+    - name: Configure permissions
+      run: |
+        sudo chown -R root:root /mnt
+        sudo mkdir -p /mnt/chroot
+        cd /mnt/chroot
+        sudo tar xvf /mnt/debian.tar/debian.tar
+        sudo rm -rf /mnt/debian.tar
+    - name: Build kernel
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; ./build.sh &; PID=$!; sleep 30m; kill $PID\""
+        sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
+        sudo chown -R runner:runner /mnt
+    - name: Upload debian chroot image
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-2
+        path: |
+          /mnt/debian.tar
+
+  actual-2:
+    needs: actual-1
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Configure permissions
+      run: |
+        sudo chown -R runner:runner /mnt
+    - name: Download debian chroot image
+      uses: actions/download-artifact@v4
+      with:
+        name: debian-2
+        path: |
+          /mnt/debian.tar
+    - name: Configure permissions
+      run: |
+        sudo chown -R root:root /mnt
+        sudo mkdir -p /mnt/chroot
+        cd /mnt/chroot
+        sudo tar xvf /mnt/debian.tar/debian.tar
+        sudo rm -rf /mnt/debian.tar
+    - name: Build kernel
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; ./build.sh\""
+        sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
+        sudo chown -R runner:runner /mnt
+    - name: Upload debian chroot image
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-3
         path: |
           /mnt/debian.tar
 
@@ -75,7 +139,7 @@ jobs:
     - name: Download debian chroot image
       uses: actions/download-artifact@v4
       with:
-        name: debian-1
+        name: debian-3
         path: |
           /mnt/debian.tar
     - name: Package kernel
