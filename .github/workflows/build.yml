@@ -130,7 +130,7 @@ jobs:
           /mnt/debian.tar
 
   package:
-    needs: actual
+    needs: actual-2
     runs-on: ubuntu-22.04
     steps:
     - name: Configure permissions
