@@ -1,8 +1,6 @@
-name: Build fresh kernel
+name: ubuntu
 on: 
-  workflow_run:
-    workflows: ["Build"]
-    types: [requested]
+  workflow_dispatch:
 
 jobs:
   build:
