@@ -1,15 +1,42 @@
-name: Build
-
-on:
-  push:
-    branches: [ master ]
+name: Build fresh kernel
+on: 
+  workflow_dispatch:
 
 jobs:
   build:
+    timeout-minutes: 360
     runs-on: ubuntu-22.04
     steps:
-      - name: Setup chroot
-        run: |
-          sudo apt install debootstrap -y
-          sudo su -c "mkdir -p /mnt/chroot/debian"
-          sudo su -c "debootstrap bullseye /mnt/chroot/debian http://deb.debian.org/debian"
+    - name: Setup chroot
+      run: |
+        sudo apt install debootstrap -y
+        sudo su -c "mkdir -p /mnt/chroot/debian"
+        sudo su -c "debootstrap bullseye /mnt/chroot/debian http://deb.debian.org/debian"
+    - name: Install basic dependencies, clone kernel repository & setup build environment
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root; apt install sudo git wget curl bison zip -y; git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git -b master --depth=1 --recursive; cd linux; wget https://gist.github.com/growtopiajaw/bf3c78ac4bd4b36c8b135eae8ffb7090/raw/73628ad34ab93761e1901c07dbdd66d1bb436166/.config\""
+    - name: Install build dependencies
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"sudo apt install flex debhelper-compat bc libelf-dev:native rsync libssl-dev:native -y; mkdir -p /etc/apt/sources.list.d; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/temporary-repository.list; mv temporary-repository.list /etc/apt/sources.list.d/\""
+    - name: Install gcc-13
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"sudo apt update; sudo apt install gcc-13 -y; sudo apt autoremove --purge gcc-10 -y; sudo apt remove --purge gcc-9-base gcc-10-base -y; sudo rm /etc/apt/sources.list.d/temporary-repository.list\""
+    - name: Setup timezone & hostname
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"sudo rm /etc/localtime; sudo ln -s /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/hostname.sh; chmod a+x hostname.sh; ./hostname.sh\""
+
+  actual:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Build kernel
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/build.sh; chmod a+x build.sh; ./build.sh\""
+
+  package:
+    needs: [build, actual]
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Package kernel
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/package.sh; chmod a+x package.sh; ./package.sh\""
