@@ -14,6 +14,7 @@ jobs:
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root; git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git -b master --depth=1 --recursive; cd linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/.config\""
     - name: Package build environment
       run: |
+        sudo tar -C /mnt/chroot/debian/root/linux/ -cvf /mnt/chroot/debian/root/linux/.git.tar .git
         sudo rm -rf /mnt/chroot/debian/root/linux/.git
         sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
         sudo chown -R runner:runner /mnt
@@ -43,6 +44,8 @@ jobs:
         sudo mkdir -p /mnt/chroot
         sudo tar -C /mnt/chroot -xvf /mnt/debian.tar/debian.tar
         sudo rm -rf /mnt/debian.tar
+        sudo tar -C /mnt/chroot/debian/root/linux/ -xvf /mnt/chroot/debian/root/linux/.git.tar
+        sudo rm -rf /mnt/chroot/debian/root/linux/.git.tar
     - name: Build & package kernel
       run: |
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"hostname ASUS-N56VZ\""
