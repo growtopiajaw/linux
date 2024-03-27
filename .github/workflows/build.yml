@@ -23,6 +23,7 @@ jobs:
     - name: Setup timezone & hostname
       run: |
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"sudo rm /etc/localtime; sudo ln -s /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/hostname.sh; chmod a+x hostname.sh; ./hostname.sh\""
+        sudo rm -rf /mnt/chroot/debian/root/linux/.git
         sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
         sudo chown -R runner:runner /mnt
     - name: Upload debian chroot image
