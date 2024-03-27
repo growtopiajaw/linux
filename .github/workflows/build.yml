@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - name: Setup chroot
       - run: |
           sudo apt install debootstrap -y
           sudo su -c "mkdir -p /mnt/chroot/debian"
