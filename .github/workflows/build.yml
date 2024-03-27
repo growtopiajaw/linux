@@ -27,14 +27,15 @@ jobs:
 
   actual:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Build kernel
     - run: |
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://gist.github.com/growtopiajaw/1556ceaca98bc33430991aebf1bd67af/raw/9bef1dc7d9c96519794045c9a3efd23b8076577f/build.sh; chmod a+x build.sh; ./build.sh\""
+
   package:
     needs: [actual, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Package kernel
     - run: |
