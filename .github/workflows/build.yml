@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Setup chroot
-      - run: |
+        run: |
           sudo apt install debootstrap -y
           sudo su -c "mkdir -p /mnt/chroot/debian"
           sudo su -c "debootstrap bullseye /mnt/chroot/debian http://deb.debian.org/debian"
