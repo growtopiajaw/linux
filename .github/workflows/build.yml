@@ -8,7 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
       - run: |
           sudo apt install debootstrap -y
           sudo su -c "mkdir -p /mnt/chroot/debian"
