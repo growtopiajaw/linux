@@ -68,8 +68,8 @@ jobs:
         rm .config
         cp /mnt/chroot/debian/root/linux/.config .config
         git add .
-        git commit -m 'Update .config'
-        git push origin
+        git commit -m 'Update .config' || true
+        git push origin || true
         popd
         mkdir -p /mnt/linux-debs
         cp /mnt/chroot/debian/root/linux/.config /mnt/config
