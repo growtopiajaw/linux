@@ -49,12 +49,28 @@ jobs:
     - name: Build & package kernel
       env:
           gjaw_token: ${{ secrets.GJAW_TOKEN }}
+          gjaw_username: ${{ secrets.GJAW_USERNAME }}
       run: |
-        python3 -m pip install githubrelease
-        python3 -m pip install click==7.1.2
+        python3 -m pip install githubrelease click==7.1.2
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"hostname ASUS-N56VZ\""
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/build.sh; chmod a+x build.sh; ./build.sh\""
         sudo chown -R runner:runner /mnt
+        pushd ~/
+        wget https://github.com/growtopiajaw/linux-buildscript/raw/main/.netrc -O netrc
+        cat netrc >> .netrc
+        sed -i "s/myusername/$gjaw_username/" .netrc
+        sed -i "s/mytoken/$gjaw_token/" .netrc
+        popd
+        git clone https://github.com/growtopiajaw/linux-buildscript
+        git config --global user.email "growtopiajaw@gmail.com"
+        git config --global user.name "Growtopia Jaw"
+        pushd linux-buildscript
+        rm .config
+        cp /mnt/chroot/debian/root/linux/.config .config
+        git add .
+        git commit -m 'Update .config' || true
+        git push origin || true
+        popd
         mkdir -p /mnt/linux-debs
         cp /mnt/chroot/debian/root/linux/.config /mnt/config
         cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/linux-debs/
