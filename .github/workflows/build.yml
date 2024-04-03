@@ -47,21 +47,22 @@ jobs:
         sudo tar -C /mnt/chroot/debian/root/linux/ -xvf /mnt/chroot/debian/root/linux/.git.tar
         sudo rm -rf /mnt/chroot/debian/root/linux/.git.tar
     - name: Build & package kernel
+      env:
+          gjaw_token: ${{ secrets.GJAW_TOKEN }}
       run: |
         python3 -m pip install githubrelease --break-system-packages
         python3 -m pip install click==7.1.2 --break-system-packages
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"hostname ASUS-N56VZ\""
         sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/build.sh; chmod a+x build.sh; ./build.sh\""
         sudo chown -R runner:runner /mnt
+        mkdir -p /mnt/linux-debs
         cp /mnt/chroot/debian/root/linux/.config /mnt/config
-        cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/
-        KERNEL_VERSION="$(cat /mnt/*.buildinfo | grep Version | sed 's/Version: //')" githubrelease --github-token $gjaw_token --progress release growtopiaJaw/linux create --name linux-${KERNEL_VERSION} --publish $KERNEL_VERSION /mnt/*.deb /mnt/*.buildinfo /mnt/*.changes
+        cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/linux-debs/
+        KERNEL_VERSION="$(cat /mnt/linux-debs/*.buildinfo | grep Version | sed 's/Version: //')" githubrelease --github-token $gjaw_token --progress release growtopiajaw/linux create --name linux-${KERNEL_VERSION} --publish $KERNEL_VERSION /mnt/linux-debs/*
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: linux
         path: |
-          /mnt/*.deb
-          /mnt/*.buildinfo
-          /mnt/*.changes
+          /mnt/linux-debs/*
           /mnt/config
