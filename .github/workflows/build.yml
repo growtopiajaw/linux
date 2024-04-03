@@ -58,7 +58,7 @@ jobs:
         mkdir -p /mnt/linux-debs
         cp /mnt/chroot/debian/root/linux/.config /mnt/config
         cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/linux-debs/
-        KERNEL_VERSION="$(cat /mnt/linux-debs/*.buildinfo | grep Version | sed 's/Version: //')" githubrelease --github-token $gjaw_token --progress release growtopiajaw/linux create --name linux-${KERNEL_VERSION} --publish $KERNEL_VERSION /mnt/linux-debs/*
+        KERNEL_VERSION="$(cat /mnt/linux-debs/*.buildinfo | grep Version | sed 's/Version: //')" && githubrelease --github-token $gjaw_token --progress release growtopiajaw/linux create --name linux-${KERNEL_VERSION} --publish $KERNEL_VERSION /mnt/linux-debs/*
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
