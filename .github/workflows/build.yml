@@ -62,6 +62,8 @@ jobs:
         sed -i "s/mytoken/$gjaw_token/" .netrc
         popd
         git clone https://github.com/growtopiajaw/linux-buildscript
+        git config --global user.email "growtopiajaw@gmail.com"
+        git config --global user.name "Growtopia Jaw"
         pushd linux-buildscript
         rm .config
         cp /mnt/chroot/debian/root/linux/.config .config
