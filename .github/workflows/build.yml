@@ -1,7 +1,7 @@
 name: Build fresh kernel
 on:
   schedule:
-  - cron: '53 00 * * *'
+  - cron: '00 01 * * *'
 
 jobs:
   build:
