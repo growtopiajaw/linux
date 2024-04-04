@@ -1,6 +1,7 @@
 name: Build fresh kernel
-on: 
-  workflow_dispatch:
+on:
+  schedule:
+  - cron: '00 01 * * *'
 
 jobs:
   build:
