@@ -1,0 +1,28 @@
+# C/C++ with GCC
+# Build your C/C++ project with GCC using make.
+# Add steps that publish test results, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/c-cpp/gcc
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-22.04
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      sudo su -c "mkdir -p /mnt/chroot; wget https://github.com/growtopiajaw/linux-buildscript/releases/download/v1.0/debian.tar.xz; sudo tar -C /mnt/chroot -xvf debian.tar.xz; sudo rm debian.tar.xz"
+      sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root; git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git -b master --depth=1 --recursive; cd linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/.config\""
+      python3 -m pip install githubrelease click==7.1.2
+      sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"hostname ASUS-N56VZ\""
+      sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/build.sh; chmod a+x build.sh; ./build.sh\""
+      mkdir -p /mnt/linux-debs
+      cp /mnt/chroot/debian/root/linux/.config /mnt/config
+      cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/linux-debs/
+      KERNEL_VERSION="$(cat /mnt/linux-debs/*.buildinfo | grep Version | sed 's/Version: //')"
+      tar -cvf linux.tar /mnt/linux-debs/* /mnt/config
+      xz -z9ev linux.tar
+      curl -F file=@linux.tar.xz https://file.io
