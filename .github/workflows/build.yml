@@ -1,0 +1,85 @@
+name: Build fresh kernel
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Setup chroot
+      run: |
+        sudo su -c "mkdir -p /mnt/chroot; wget https://github.com/growtopiajaw/linux-buildscript/releases/download/v1.0/debian_10-04-2024.tar.xz; sudo tar -C /mnt/chroot -xvf debian_*.tar.xz; sudo rm debian_*.tar.xz"
+    - name: Clone kernel repository & setup build environment
+      run: |
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root; git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git -b master --depth=1 --recursive; cd linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/.config\""
+    - name: Package build environment
+      run: |
+        sudo tar -C /mnt/chroot/debian/root/linux/ -cvf /mnt/chroot/debian/root/linux/.git.tar .git
+        sudo rm -rf /mnt/chroot/debian/root/linux/.git
+        sudo tar -C /mnt/chroot -cvf /mnt/debian.tar debian
+        sudo chown -R runner:runner /mnt
+    - name: Upload debian chroot image
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian
+        path: |
+          /mnt/debian.tar
+
+  actual:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Configure permissions
+      run: |
+        sudo chown -R runner:runner /mnt
+    - name: Download debian chroot image
+      uses: actions/download-artifact@v4
+      with:
+        name: debian
+        path: |
+          /mnt/debian.tar
+    - name: Configure permissions
+      run: |
+        sudo chown -R root:root /mnt
+        sudo mkdir -p /mnt/chroot
+        sudo tar -C /mnt/chroot -xvf /mnt/debian.tar/debian.tar
+        sudo rm -rf /mnt/debian.tar
+        sudo tar -C /mnt/chroot/debian/root/linux/ -xvf /mnt/chroot/debian/root/linux/.git.tar
+        sudo rm -rf /mnt/chroot/debian/root/linux/.git.tar
+    - name: Build & package kernel
+      env:
+          gjaw_token: ${{ secrets.GJAW_TOKEN }}
+          gjaw_username: ${{ secrets.GJAW_USERNAME }}
+      run: |
+        python3 -m pip install githubrelease click==7.1.2
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"hostname ASUS-N56VZ\""
+        sudo su -c "chroot /mnt/chroot/debian /bin/bash -c \"cd /root/linux; wget https://github.com/growtopiajaw/linux-buildscript/raw/main/build.sh; chmod a+x build.sh; ./build.sh\""
+        sudo chown -R runner:runner /mnt
+        pushd ~/
+        wget https://github.com/growtopiajaw/linux-buildscript/raw/main/.netrc -O netrc
+        cat netrc >> .netrc
+        sed -i "s/myusername/$gjaw_username/" .netrc
+        sed -i "s/mytoken/$gjaw_token/" .netrc
+        popd
+        git clone https://github.com/growtopiajaw/linux-buildscript
+        git config --global user.email "growtopiajaw@gmail.com"
+        git config --global user.name "Growtopia Jaw"
+        pushd linux-buildscript
+        rm .config
+        cp /mnt/chroot/debian/root/linux/.config .config
+        git add .
+        git commit -m 'Update .config' || true
+        git push origin || true
+        popd
+        mkdir -p /mnt/linux-debs
+        cp /mnt/chroot/debian/root/linux/.config /mnt/config
+        cp /mnt/chroot/debian/root/*.deb /mnt/chroot/debian/root/*.buildinfo /mnt/chroot/debian/root/*.changes /mnt/linux-debs/
+        KERNEL_VERSION="$(cat /mnt/linux-debs/*.buildinfo | grep Version | sed 's/Version: //')" && githubrelease --github-token $gjaw_token --progress release growtopiajaw/linux create --name linux-${KERNEL_VERSION} --publish $KERNEL_VERSION /mnt/linux-debs/*
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux
+        path: |
+          /mnt/linux-debs/*
+          /mnt/config
