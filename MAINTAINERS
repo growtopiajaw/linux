@@ -3815,7 +3815,7 @@ F:	arch/arm/net/
 BPF JIT for ARM64
 M:	Daniel Borkmann <daniel@iogearbox.net>
 M:	Alexei Starovoitov <ast@kernel.org>
-M:	Zi Shen Lim <zlim.lnx@gmail.com>
+M:	Puranjay Mohan <puranjay@kernel.org>
 L:	bpf@vger.kernel.org
 S:	Supported
 F:	arch/arm64/net/
@@ -12374,12 +12374,14 @@ F:	net/l3mdev
 
 LANDLOCK SECURITY MODULE
 M:	Mickaël Salaün <mic@digikod.net>
+R:	Günther Noack <gnoack@google.com>
 L:	linux-security-module@vger.kernel.org
 S:	Supported
 W:	https://landlock.io
 T:	git https://git.kernel.org/pub/scm/linux/kernel/git/mic/linux.git
 F:	Documentation/security/landlock.rst
 F:	Documentation/userspace-api/landlock.rst
+F:	fs/ioctl.c
 F:	include/uapi/linux/landlock.h
 F:	samples/landlock/
 F:	security/landlock/
@@ -18667,6 +18669,7 @@ M:	"Theodore Ts'o" <tytso@mit.edu>
 M:	Jason A. Donenfeld <Jason@zx2c4.com>
 S:	Maintained
 T:	git https://git.kernel.org/pub/scm/linux/kernel/git/crng/random.git
+F:	Documentation/devicetree/bindings/rng/microsoft,vmgenid.yaml
 F:	drivers/char/random.c
 F:	drivers/virt/vmgenid.c
 
@@ -22392,7 +22395,6 @@ F:	drivers/counter/ti-eqep.c
 
 TI ETHERNET SWITCH DRIVER (CPSW)
 R:	Siddharth Vadapalli <s-vadapalli@ti.com>
-R:	Ravi Gunasekaran <r-gunasekaran@ti.com>
 R:	Roger Quadros <rogerq@kernel.org>
 L:	linux-omap@vger.kernel.org
 L:	netdev@vger.kernel.org
