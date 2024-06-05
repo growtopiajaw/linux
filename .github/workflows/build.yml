@@ -1,5 +1,6 @@
 name: Build fresh kernel
 on:
+  workflow_dispatch:
   push:
     branches: master
 
